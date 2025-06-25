@@ -1,19 +1,25 @@
 const express = require('express');
 const mongoose = require('mongoose');
-
+const bodyParser = require('body-parser');
 const apiRoutes = require('./apiRoutes');
 
-// Для работы с express
+// Initialize express app
 const app = express();
 
+// Middleware to parse JSON bodies
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Use API routes
 app.use('/api', apiRoutes);
 
-/**
- * Пример создания и записи данных в базу данных
- */
-const MONGO_URI = process.env.MONGO_URI;
+// MongoDB connection
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/calculator_db';
 
-const mongoDb = mongoose.createConnection(MONGO_URI);
+const mongoDb = mongoose.createConnection(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
 
 mongoDb
   .asPromise()
@@ -24,14 +30,13 @@ mongoDb
     console.error('MongoDB connection error:', err);
   });
 
-// const MongoTestSchema = new mongoose.Schema({
-//   value: { type: String, required: true },
-// });
+// Make mongoDb accessible globally
+global.mongoDb = mongoDb;
 
-// const MongoModelTest = global.mongoDb.model('Test', MongoTestSchema);
+// Define port
+const PORT = process.env.PORT || 3000;
 
-// const newTest = new MongoModelTest({
-//   value: 'test-value',
-// });
-
-// newTest.save();
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
